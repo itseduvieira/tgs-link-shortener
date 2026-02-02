@@ -40,7 +40,7 @@ export const handler = async (event) => {
       Item: {
         shortcode: shortCode,
         long_url: url,
-        created_at: new Date().toISOString(),
+        created_at: Date.now(),
       },
     }));
 

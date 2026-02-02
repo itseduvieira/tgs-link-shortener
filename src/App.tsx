@@ -66,7 +66,7 @@ function App() {
               type="submit"
               disabled={loading}
               className="w-full px-6 py-4 text-lg font-medium text-light bg-dark
-                         rounded-xl hover:bg-dark/90 transition-colors
+                         rounded-xl font-bold hover:bg-dark/90 transition-colors
                          disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Shortening...' : 'Shorten URL'}

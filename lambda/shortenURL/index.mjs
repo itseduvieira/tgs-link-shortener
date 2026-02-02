@@ -1,5 +1,5 @@
 import Redis from 'ioredis';
-import Hashids from 'hashids';
+import Hashids from 'hashids/esm/hashids';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { PutCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
@@ -16,7 +16,6 @@ const docClient = DynamoDBDocumentClient.from(dynamoClient);
 const TABLE_NAME = process.env.DYNAMODB_TABLE;
 
 const ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-const ID_OFFSET = 62 ** 4;
 const hashids = new Hashids(process.env.HASHIDS_SALT, 0, ALPHABET);
 
 export const handler = async (event) => {
@@ -32,7 +31,7 @@ export const handler = async (event) => {
 
     // Redis only for ID generation
     const id = await redis.incr('url:counter');
-    const shortCode = hashids.encode(id + ID_OFFSET);
+    const shortCode = hashids.encode(id);
 
     // Store in DynamoDB
     await docClient.send(new PutCommand({

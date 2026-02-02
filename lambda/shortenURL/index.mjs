@@ -1,4 +1,7 @@
 import Redis from 'ioredis';
+import Hashids from 'hashids';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { PutCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 const redis = new Redis({
   host: process.env.REDIS_HOST,
@@ -8,22 +11,18 @@ const redis = new Redis({
   maxRetriesPerRequest: 1,
 });
 
-const CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+const dynamoClient = new DynamoDBClient({});
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
+const TABLE_NAME = process.env.DYNAMODB_TABLE;
 
-function toBase62(num) {
-  if (num === 0) return CHARS[0];
-  let result = '';
-  while (num > 0) {
-    result = CHARS[num % 62] + result;
-    num = Math.floor(num / 62);
-  }
-  return result;
-}
+const ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+const ID_OFFSET = 62 ** 4;
+const hashids = new Hashids(process.env.HASHIDS_SALT, 0, ALPHABET);
 
 export const handler = async (event) => {
   try {
     const { url } = JSON.parse(event.body);
-    
+
     if (!url) {
       return {
         statusCode: 400,
@@ -31,10 +30,19 @@ export const handler = async (event) => {
       };
     }
 
+    // Redis only for ID generation
     const id = await redis.incr('url:counter');
-    const shortCode = toBase62(id);
+    const shortCode = hashids.encode(id + ID_OFFSET);
 
-    await redis.set(`url:${shortCode}`, url);
+    // Store in DynamoDB
+    await docClient.send(new PutCommand({
+      TableName: TABLE_NAME,
+      Item: {
+        shortcode: shortCode,
+        long_url: url,
+        created_at: new Date().toISOString(),
+      },
+    }));
 
     return {
       statusCode: 201,

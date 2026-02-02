@@ -1,73 +1,96 @@
-# React + TypeScript + Vite
+# tgs.lol - Link Shortener
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A serverless URL shortener built on AWS infrastructure.
 
-Currently, two official plugins are available:
+## Architecture Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Frontend  │────▶│ API Gateway │────▶│   Lambda    │────▶│    Redis    │
+│  (React/S3) │     │  (HTTP API) │     │  (Node.js)  │     │   (EC2)     │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Frontend
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Tech Stack
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- **React 19** - UI library
+- **TypeScript** - Type safety
+- **Vite** - Build tool and dev server
+- **Tailwind CSS** - Utility-first styling
+
+### Features
+
+- Single-page application with minimal UI
+- Paste URL → Get shortened link
+- One-click copy to clipboard
+- Responsive design (mobile-first)
+- Custom color scheme with CSS variables
+
+### Design System
+
+Colors are defined as CSS custom properties for easy theming:
+
+```css
+:root {
+  --color-light: #EAE5E3;        /* Background */
+  --color-dark: rgba(0,0,0,0.8); /* Text/Buttons */
+  --color-muted: #64748b;        /* Secondary text */
+}
 ```
+
+### Project Structure
+
+```
+src/
+├── App.tsx          # Main application component
+├── main.tsx         # React entry point
+└── css/
+    └── index.css    # Tailwind + custom styles
+```
+
+### API Integration
+
+The frontend communicates with the backend via a single endpoint:
+
+```typescript
+POST https://api.tgs.lol/v1/shorten
+Content-Type: application/json
+
+{
+  "url": "https://example.com/very/long/url"
+}
+
+// Response
+{
+  "shortUrl": "https://tgs.lol/abc123"
+}
+```
+
+### Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start dev server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+### Deployment
+
+Frontend is deployed to AWS S3 + CloudFront.
+
+---
+
+## Backend
+
+*Documentation to be added...*
+
+## Infrastructure
+
+*Documentation to be added...*

@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "merge:main": "git checkout main && git merge develop && git push origin main && git checkout develop",
-    "push:develop": "f() { git add . && git commit -m \"$1\" && git push origin develop; }; f"
+    "push:develop": "f() { git add . && git commit -m \"$1\" && git push origin develop; }; f",
+    "build:lambda": "cd lambda/shortenURL && mkdir -p ../dist && zip -r ../dist/shortenURL.zip index.mjs node_modules package.json"
   },
   "dependencies": {
     "react": "^19.2.0",

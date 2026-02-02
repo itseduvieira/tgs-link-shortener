@@ -11,12 +11,21 @@ function App() {
     if (!url.trim()) return
 
     setLoading(true)
-    
-    // TODO: Replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 500))
-    setShortUrl(`https://tgs.lol/${Math.random().toString(36).slice(2, 8)}`)
-    
-    setLoading(false)
+
+    try {
+      const response = await fetch('https://api.tgs.lol/v1/shorten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      })
+
+      const data = await response.json()
+      setShortUrl(data.shortUrl)
+    } catch (error) {
+      console.error('Failed to shorten URL:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleCopy = async () => {
@@ -38,10 +47,6 @@ function App() {
         <h1 className="text-6xl sm:text-[72px] md:text-[96px] font-bold tracking-tight text-dark leading-[1.05] mb-4">
           Link Shortener
         </h1>
-        
-        <p className="text-muted text-lg mb-12">
-          Make it short
-        </p>
 
         {/* Form */}
         {!shortUrl ? (

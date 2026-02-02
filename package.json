@@ -11,7 +11,8 @@
     "merge:main": "git checkout main && git merge develop && git push origin main && git checkout develop",
     "push:develop": "f() { git add . && git commit -m \"$1\" && git push origin develop; }; f",
     "build:shorten": "cd lambda/shortenURL && npm i && rm -Rf ../dist && mkdir -p ../dist && zip -r ../dist/shortenURL.zip index.mjs node_modules package.json",
-    "build:redirect": "cd lambda/redirect && mkdir -p ../dist && zip -r ../dist/redirect.zip index.mjs package.json"
+    "build:redirect": "cd lambda/redirect && mkdir -p ../dist && zip -r ../dist/redirect.zip index.mjs package.json",
+    "build:stats": "cd lambda/stats && mkdir -p ../dist && zip -r ../dist/stats.zip index.mjs package.json"
   },
   "dependencies": {
     "react": "^19.2.0",

@@ -32,6 +32,7 @@ export const handler = async (event) => {
     // Redis only for ID generation
     const id = await redis.incr('url:counter');
     const shortCode = hashids.encode(id);
+    console.log('SHORTEN', shortCode, url);
 
     // Store in DynamoDB
     await docClient.send(new PutCommand({

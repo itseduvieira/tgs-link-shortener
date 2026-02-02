@@ -2,95 +2,75 @@
 
 A serverless URL shortener built on AWS infrastructure.
 
-## Architecture Overview
+## Architecture
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Frontend  │────▶│ API Gateway │────▶│   Lambda    │────▶│    Redis    │
-│  (React/S3) │     │  (HTTP API) │     │  (Node.js)  │     │   (EC2)     │
-└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+                    ┌─────────────┐
+                    │   Frontend  │
+                    │  (React/S3) │
+                    └──────┬──────┘
+                           │
+┌─────────────┐            │            ┌─────────────┐
+│  Telegram   │────────────┼───────────▶│ API Gateway │
+└─────────────┘            │            │  (HTTP API) │
+                           │            │ api.tgs.lol │
+┌─────────────┐            │            └──────┬──────┘
+│     n8n     │────────────┘                   │
+└─────────────┘                                ▼
+                                        ┌─────────────┐
+                                        │   Lambda    │
+                                        │  (Node.js)  │
+                                        └──────┬──────┘
+                                               │
+                          ┌────────────────────┼────────────────────┐
+                          ▼                    ▼                    ▼
+                   ┌─────────────┐      ┌─────────────┐      ┌─────────────┐
+                   │   DynamoDB  │      │    Redis    │      │   tgs.lol   │
+                   │  (tgs-urls) │      │    (EC2)    │      │  (redirect) │
+                   └─────────────┘      └─────────────┘      └─────────────┘
 ```
 
-## Frontend
+## How It Works
 
-### Tech Stack
+1. **Shorten** - Client sends URL to `POST /v1/shorten`
+2. **Generate ID** - Redis `INCR` generates unique sequential ID
+3. **Encode** - Hashids encodes ID to short code (base62)
+4. **Store** - DynamoDB saves mapping (shortcode → long_url)
+5. **Redirect** - `GET /{code}` looks up URL and returns 302 redirect
 
-- **React 19** - UI library
-- **TypeScript** - Type safety
-- **Vite** - Build tool and dev server
-- **Tailwind CSS** - Utility-first styling
+## API
 
-### Features
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v1/shorten` | POST | Create short URL |
+| `/{code}` | GET | Redirect to original URL |
 
-- Single-page application with minimal UI
-- Paste URL → Get shortened link
-- One-click copy to clipboard
-- Responsive design (mobile-first)
-- Custom color scheme with CSS variables
+**Request:** `{"url": "https://example.com/long-url"}`
 
-### Design System
+**Response:** `{"shortUrl": "https://tgs.lol/abc123", "code": "abc123"}`
 
-Colors are defined as CSS custom properties for easy theming:
+## Tech Stack
 
-```css
-:root {
-  --color-light: #EAE5E3;        /* Background */
-  --color-dark: rgba(0,0,0,0.8); /* Text/Buttons */
-  --color-muted: #64748b;        /* Secondary text */
-}
-```
+**Frontend:** React 19, TypeScript, Vite, Tailwind CSS
 
-### Project Structure
+**Backend:** AWS Lambda (Node.js), API Gateway, DynamoDB, Redis (EC2)
 
-```
-src/
-├── App.tsx          # Main application component
-├── main.tsx         # React entry point
-└── css/
-    └── index.css    # Tailwind + custom styles
-```
+**Integrations:** Telegram Bot, n8n workflows
 
-### API Integration
-
-The frontend communicates with the backend via a single endpoint:
-
-```typescript
-POST https://api.tgs.lol/v1/shorten
-Content-Type: application/json
-
-{
-  "url": "https://example.com/very/long/url"
-}
-
-// Response
-{
-  "shortUrl": "https://tgs.lol/abc123"
-}
-```
-
-### Local Development
+## Development
 
 ```bash
-# Install dependencies
-npm install
-
-# Start dev server
-npm run dev
-
-# Build for production
-npm run build
+npm install          # Install dependencies
+npm run dev          # Start dev server
+npm run build:shorten   # Build shortenURL lambda
+npm run build:redirect  # Build redirect lambda
 ```
 
-### Deployment
+## Lambda Environment Variables
 
-Frontend is deployed to AWS S3 + CloudFront.
-
----
-
-## Backend
-
-*Documentation to be added...*
-
-## Infrastructure
-
-*Documentation to be added...*
+| Variable | Lambda | Description |
+|----------|--------|-------------|
+| `REDIS_HOST` | shortenURL | Redis EC2 IP |
+| `REDIS_PASSWORD` | shortenURL | Redis auth |
+| `DYNAMODB_TABLE` | both | Table name (`tgs-urls`) |
+| `HASHIDS_SALT` | shortenURL | Salt for encoding |
